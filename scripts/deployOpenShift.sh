@@ -11,7 +11,7 @@ export MASTERPUBLICIPHOSTNAME=$4
 export MASTERPUBLICIPADDRESS=$5
 export INFRA=$6
 export NODE=$7
-export NODECOUNT=$8
+export TESTNODECOUNT=$8
 export INFRACOUNT=$9
 export MASTERCOUNT=${10}
 export ROUTING=${11}
@@ -31,11 +31,21 @@ export STORAGEKIND=${24}
 
 export PRODNODECOUNT=${25}
 
-export TESTNODECOUNT=$NODECOUNT
 export PRODNODE="${NODE}p"
 export TESTNODE="${NODE}t"
 
 export BASTION=$(hostname)
+
+# for debugging purps
+echo "$SUDOUSER [1] - $PASSWORD [2]"
+echo "$MASTER [3] - $MASTERPUBLICIPHOSTNAME [4] - $MASTERPUBLICIPADDRESS [5]"
+echo "$INFRA [6] - $NODE [7] - $TESTNODECOUNT [8] - $INFRACOUNT [9]"
+echo "$MASTERCOUNT [10] - $ROUTING [11] - $REGISTRYSA [12] - $ACCOUNTKEY [13]"
+echo "$METRICS [14] - $LOGGING [15] - $TENANTID [16]"
+echo "$SUBSCRIPTIONID [17] - $AADCLIENTID [18] - $AADCLIENTSECRET [19]"
+echo "$RESOURCEGROUP [20] - $LOCATION [21] - $COCKPIT [22] - $AZURE [23]"
+echo "$STORAGEKIND [24] - $PRODNODECOUNT [25]"
+echo "$PRODNODE - $TESTNODE - $BASTION"
 
 # Determine if Commercial Azure or Azure Government
 CLOUD=$( curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/location?api-version=2017-04-02&format=text" | cut -c 1-2 )
