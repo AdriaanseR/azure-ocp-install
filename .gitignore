@@ -253,3 +253,4 @@ paket-files/
 
 deploy.sh
 deploy.cfg
+azuredeploy.parameters.json

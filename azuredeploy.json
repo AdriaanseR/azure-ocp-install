@@ -8,7 +8,7 @@
 				"description": "Base URL for Template Files",
 				"artifactsBaseUrl": ""
 			},
-			"defaultValue": "https://raw.githubusercontent.com/Microsoft/openshift-container-platform/release-3.7"
+			"defaultValue": "https://raw.githubusercontent.com/AdriaanseR/azure-ocp-install/37mods"
 		},
 		"masterVmSize": {
 			"type": "string",
@@ -115,7 +115,15 @@
 				"description": "Number of OpenShift infra nodes.  1 is non HA.  Choose 2 or 3 for HA"
 			}
 		},
-		"nodeInstanceCount": {
+		"testNodeInstanceCount": {
+			"type": "int",
+			"defaultValue": 2,
+			"allowedValues": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+			"metadata": {
+				"description": "Number of OpenShift nodes"
+			}
+		},
+		"prodNodeInstanceCount": {
 			"type": "int",
 			"defaultValue": 2,
 			"allowedValues": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
@@ -274,10 +282,12 @@
 		"apiVersionLinkTemplate": "2015-01-01",
 		"defaultSubDomain": "[toLower(parameters('defaultSubDomain'))]",
 		"namingInfix": "[toLower(parameters('openshiftClusterPrefix'))]",
-		"openshiftBastionHostname": "[concat(variables('namingInfix'), '-bastion')]",
-		"openshiftMasterHostname": "[concat(variables('namingInfix'), '-master')]",
-		"openshiftNodeHostname": "[concat(variables('namingInfix'), '-node')]",
-		"openshiftInfraHostname": "[concat(variables('namingInfix'), '-infra')]",
+		"openshiftBastionHostname": "[concat(variables('namingInfix'), 'b')]",
+		"openshiftMasterHostname": "[concat(variables('namingInfix'),  'm')]",
+		"openshiftNodeHostname": "[concat(variables('namingInfix'),    'n')]",
+		"openshiftTestNodeHostname": "[concat(variables('openshiftNodeHostname'), 't')]",
+		"openshiftProdNodeHostname": "[concat(variables('openshiftNodeHostname'), 'p')]",
+		"openshiftInfraHostname": "[concat(variables('namingInfix'),   'i')]",
 		"newStorageAccountBastion": "[concat('bastion', uniqueString(concat(resourceGroup().id, 'bsa')))]",
 		"newStorageAccountMaster": "[concat('master', uniqueString(concat(resourceGroup().id, 'msa')))]",
 		"newStorageAccountInfra": "[concat('infra', uniqueString(concat(resourceGroup().id, 'isa')))]",
@@ -301,7 +311,7 @@
 		"availabilitySetArray": [
 			{ "name": "masteravailabilityset", "tagName": "MasterAvailabilitySet" },
 			{ "name": "infraavailabilityset", "tagName": "InfraAvailabilitySet" },
-			{ "name": "nodeavailabilityset", "tagName": "NodeAvailabilitySet" }
+			{ "name": "nodeavailabilityset", "tagName": "nodeAvailabilitySet" }
 		],
 		"unmanagedAvailabilitySetSku": "Classic",
 		"managedAvailabilitySetSku": "Aligned",
@@ -357,11 +367,13 @@
 		"infraUri": "[concat(parameters('storageKind'), 'InfraUri')]",
 		"nodeOsUri": "[concat(parameters('storageKind'), 'NodeOsUri')]",
 		"nodeDataUri": "[concat(parameters('storageKind'), 'NodeDataUri')]",
-		"addressPrefix": "10.0.0.0/8",
-		"masterSubnetPrefix": "10.1.0.0/16",
-		"nodeSubnetPrefix": "10.2.0.0/16",
+		"addressPrefix": "10.203.0.0/20",
+		"masterSubnetPrefix": "10.203.2.0/24",
+		"infraSubnetPrefix": "10.203.7.0/24",
+		"nodeSubnetPrefix": "10.203.4.0/24",
 		"virtualNetworkName": "openshiftvnet",
 		"masterSubnetName": "mastersubnet",
+		"infraSubnetName": "infrasubnet",
 		"nodeSubnetName": "nodesubnet",
 		"bastionPublicIp": "bastionpublicip",
 		"bastionPublicIpDnsLabel": "[concat('bastiondns', uniqueString(resourceGroup().id))]",
@@ -966,6 +978,11 @@
 						"addressPrefix": "[variables('masterSubnetPrefix')]"
 					}
 				}, {
+					"name": "[variables('infraSubnetName')]",
+					"properties": {
+						"addressPrefix": "[variables('infraSubnetPrefix')]"
+					}
+				}, {	
 					"name": "[variables('nodeSubnetName')]",
 					"properties": {
 						"addressPrefix": "[variables('nodeSubnetPrefix')]"
@@ -1361,7 +1378,7 @@
 					"properties": {
 						"privateIPAllocationMethod": "Dynamic",
 						"subnet": {
-							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('masterSubnetName'))]"
+							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('infraSubnetName'))]"
 						},
 						"loadBalancerBackendAddressPools": [{
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('infraLoadBalancerName'), '/backendAddressPools/loadBalancerBackEnd')]"
@@ -1374,11 +1391,11 @@
 			}
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
-			"name": "[concat(variables('openshiftNodeHostname'), '-', copyIndex(), '-nic')]",
+			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex(), '-nic')]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"tags": {
-				"displayName": "OpenShiftNodeNetworkInterfaces",
+				"displayName": "OpenShiftTestNodeNetworkInterfaces",
 				"provider": "[variables('redHatTags').provider]",
 				"app": "[variables('redHatTags').app]"
 			},
@@ -1387,12 +1404,12 @@
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftNodeHostname'), '-nsg')]"
 			],
 			"copy": {
-				"name": "nodeNicLoop",
-				"count": "[parameters('nodeInstanceCount')]"
+				"name": "testNodeNicLoop",
+				"count": "[parameters('testNodeInstanceCount')]"
 			},
 			"properties": {
 				"ipConfigurations": [{
-					"name": "[concat(variables('openshiftNodeHostname'), copyIndex(), 'ipconfig')]",
+					"name": "[concat(variables('openshiftTestNodeHostname'), copyIndex(), 'ipconfig')]",
 					"properties": {
 						"privateIPAllocationMethod": "Dynamic",
 						"subnet": {
@@ -1634,17 +1651,17 @@
 				}
 			}
 		}, {
-			"name": "[concat('nodeVmDeployment', copyindex())]",
+			"name": "[concat('testNodeVmDeployment', copyindex())]",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "[variables('apiVersionLinkTemplate')]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccount2'))]",
-				"nodeNicLoop",
+				"testNodeNicLoop",
 				"nodeavailabilityset"
 			],
 			"copy": {
-				"name": "nodeVmLoop",
-				"count": "[parameters('nodeInstanceCount')]"
+				"name": "testNodeVmLoop",
+				"count": "[parameters('testNodeInstanceCount')]"
 			},
 			"properties": {
 				"mode": "Incremental",
@@ -1675,7 +1692,7 @@
 						"value": "nodeavailabilityset"
 					},
 					"hostName": {
-						"value": "[concat(variables('openshiftNodeHostname'), '-', copyIndex())]"
+						"value": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex())]"
 					},
 					"unmanagedOsDiskUri": {
 						"value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables(variables('nodeOsUri'))), variables('apiVersionStorage')).primaryEndpoints['blob']]"
@@ -1833,20 +1850,20 @@
 			}
 		}, {
 			"type": "Microsoft.Compute/virtualMachines/extensions",
-			"name": "[concat(variables('openshiftNodeHostname'), '-', copyIndex(), '/prepNodes')]",
+			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex(), '/prepNodes')]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"tags": {
-				"displayName": "PrepNodes",
+				"displayName": "PrepTestNodes",
 				"provider": "[variables('redHatTags').provider]",
 				"app": "[variables('redHatTags').app]"
 			},
 			"dependsOn": [
-				"[concat('nodeVmDeployment', copyindex())]"
+				"[concat('testNodeVmDeployment', copyindex())]"
 			],
 			"copy": {
-				"name": "nodePrepLoop",
-				"count": "[parameters('nodeInstanceCount')]"
+				"name": "testNodePrepLoop",
+				"count": "[parameters('testNodeInstanceCount')]"
 			},
 			"properties": {
 				"publisher": "Microsoft.Azure.Extensions",
@@ -1921,8 +1938,11 @@
 					"infraInstanceCount": {
 						"value": "[parameters('infraInstanceCount')]"
 					},
-					"nodeInstanceCount": {
-						"value": "[parameters('nodeInstanceCount')]"
+					"testNodeInstanceCount": {
+						"value": "[parameters('testNodeInstanceCount')]"
+					},
+					"prodNodeInstanceCount": {
+						"value": "[parameters('prodNodeInstanceCount')]"
 					},
 					"storageKind": {
 						"value": "[parameters('storageKind')]"
