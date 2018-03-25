@@ -508,11 +508,18 @@ do
   echo "$INFRA-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra'}\" openshift_hostname=$INFRA-$c" >> /etc/ansible/hosts
 done
 
-# Loop to add Nodes
+# Loop to add Test Nodes
 
 for (( c=0; c<$NODECOUNT; c++ ))
 do
-  echo "$NODE-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
+  echo "${NODE}t-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
+done
+
+# Loop to add Production Nodes
+
+for (( c=0; c<$PRODNODECOUNT; c++ ))
+do
+  echo "${NODE}p-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
 done
 
 # Create new_nodes group
