@@ -517,10 +517,10 @@ done
 
 # Loop to add Production Nodes
 
-for (( c=0; c<$PRODNODECOUNT; c++ ))
-do
-  echo "${NODE}p-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
-done
+#for (( c=0; c<$PRODNODECOUNT; c++ ))
+#do
+#  echo "${NODE}p-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
+#done
 
 # Create new_nodes group
 
