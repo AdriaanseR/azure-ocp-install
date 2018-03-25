@@ -28,7 +28,12 @@ export LOCATION=${21}
 export COCKPIT=${22}
 export AZURE=${23}
 export STORAGEKIND=${24}
+
 export PRODNODECOUNT=${25}
+
+export TESTNODECOUNT=$NODECOUNT
+export PRODNODE="${NODE}p"
+export TESTNODE="${NODE}t"
 
 export BASTION=$(hostname)
 
@@ -38,7 +43,8 @@ export CLOUD=${CLOUD^^}
 
 export MASTERLOOP=$((MASTERCOUNT - 1))
 export INFRALOOP=$((INFRACOUNT - 1))
-export NODELOOP=$((NODECOUNT - 1))
+export TESTNODELOOP=$((TESTNODECOUNT - 1))
+export PRODNODELOOP=$((PRODNODECOUNT - 1))
 
 echo "Configuring SSH ControlPath to use shorter path name"
 
@@ -505,22 +511,22 @@ done
 
 for (( c=0; c<$INFRACOUNT; c++ ))
 do
-  echo "$INFRA-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra'}\" openshift_hostname=$INFRA-$c" >> /etc/ansible/hosts
+  echo "$INFRA-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'public'}\" openshift_hostname=$INFRA-$c" >> /etc/ansible/hosts
 done
 
 # Loop to add Test Nodes
 
-for (( c=0; c<$NODECOUNT; c++ ))
+for (( c=0; c<$TESTNODECOUNT; c++ ))
 do
-  echo "${NODE}t-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
+  echo "${TESTNODE}-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default', 'environment': 'test'}\" openshift_hostname=${TESTNODE}-$c" >> /etc/ansible/hosts
 done
 
 # Loop to add Production Nodes
 
-#for (( c=0; c<$PRODNODECOUNT; c++ ))
-#do
-#  echo "${NODE}p-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default'}\" openshift_hostname=$NODE-$c" >> /etc/ansible/hosts
-#done
+for (( c=0; c<$PRODNODECOUNT; c++ ))
+do
+  echo "${PRODNODE}-$c openshift_node_labels=\"{'type': 'app', 'zone': 'default', 'environment': 'production'}\" openshift_hostname=${PRODNODE}-$c" >> /etc/ansible/hosts
+done
 
 # Create new_nodes group
 

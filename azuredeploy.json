@@ -1422,6 +1422,38 @@
 				}
 			}
 		}, {
+			"type": "Microsoft.Network/networkInterfaces",
+			"name": "[concat(variables('openshiftProdNodeHostname'), '-', copyIndex(), '-nic')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftProdNodeNetworkInterfaces",
+				"provider": "[variables('redHatTags').provider]",
+				"app": "[variables('redHatTags').app]"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftNodeHostname'), '-nsg')]"
+			],
+			"copy": {
+				"name": "prodNodeNicLoop",
+				"count": "[parameters('prodNodeInstanceCount')]"
+			},
+			"properties": {
+				"ipConfigurations": [{
+					"name": "[concat(variables('openshiftProdNodeHostname'), copyIndex(), 'ipconfig')]",
+					"properties": {
+						"privateIPAllocationMethod": "Dynamic",
+						"subnet": {
+							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('nodeSubnetName'))]"
+						}
+					}
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+				}
+			}	
+		}, {
 			"name": "bastionVmDeployment",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "[variables('apiVersionLinkTemplate')]",
@@ -1733,6 +1765,88 @@
 				}
 			}
 		}, {
+			"name": "[concat('prodNodeVmDeployment', copyindex())]",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "[variables('apiVersionLinkTemplate')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccount2'))]",
+				"prodNodeNicLoop",
+				"nodeavailabilityset"
+			],
+			"copy": {
+				"name": "prodNodeVmLoop",
+				"count": "[parameters('prodNodeInstanceCount')]"
+			},
+			"properties": {
+				"mode": "Incremental",
+				"templateLink": {
+					"uri": "[variables('clusterNodeDeploymentTemplateUrl')]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"location": {
+						"value": "[variables('location')]"
+					},
+					"sshKeyPath": {
+						"value": "[variables('sshKeyPath')]"
+					},
+					"sshPublicKey": {
+						"value": "[parameters('sshPublicKey')]"
+					},
+					"dataDiskSize": {
+						"value": "[parameters('dataDiskSize')]"
+					},
+					"adminUsername": {
+						"value": "[parameters('adminUsername')]"
+					},
+					"vmSize": {
+						"value": "[parameters('nodeVmSize')]"
+					},
+					"availabilitySet": {
+						"value": "nodeavailabilityset"
+					},
+					"hostName": {
+						"value": "[concat(variables('openshiftProdNodeHostname'), '-', copyIndex())]"
+					},
+					"unmanagedOsDiskUri": {
+						"value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables(variables('nodeOsUri'))), variables('apiVersionStorage')).primaryEndpoints['blob']]"
+					},
+					"unmanagedDataDiskUri": {
+						"value": "[reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables(variables('nodeDataUri'))), variables('apiVersionStorage')).primaryEndpoints['blob']]"
+					},
+					"role": {
+						"value": "appnode"
+					},
+					"vmStorageType": {
+						"value": "[variables('vmSizesMap')[parameters('nodeVmSize')].storageAccountType]"
+					},
+					"storageKind": {
+						"value": "[parameters('storageKind')]"
+					},
+					"newStorageAccountOs": {
+						"value": "[variables('newStorageAccountNodeOs')]"
+					},
+					"newStorageAccountData": {
+						"value": "[variables('newStorageAccountNodeData')]"
+					},
+					"diagStorageAccount": {
+						"value": "[variables('diagStorageAccount2')]"
+					},
+					"apiVersionStorage": {
+						"value": "[variables('apiVersionStorage')]"
+					},
+					"apiVersionCompute": {
+						"value": "[variables('apiVersionCompute')]"
+					},
+					"imageReference": {
+						"value": "[variables('imageReference')]"
+					},
+					"redHatTags": {
+						"value": "[variables('redHatTags')]"
+					}
+				}
+			}
+		}, {
 			"name": "bastionPrep",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "[variables('apiVersionLinkTemplate')]",
@@ -1880,6 +1994,37 @@
 				}
 			}
 		}, {
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(variables('openshiftProdNodeHostname'), '-', copyIndex(), '/prepNodes')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"tags": {
+				"displayName": "PrepProdNodes",
+				"provider": "[variables('redHatTags').provider]",
+				"app": "[variables('redHatTags').app]"
+			},
+			"dependsOn": [
+				"[concat('prodNodeVmDeployment', copyindex())]"
+			],
+			"copy": {
+				"name": "prodNodePrepLoop",
+				"count": "[parameters('prodNodeInstanceCount')]"
+			},
+			"properties": {
+				"publisher": "Microsoft.Azure.Extensions",
+				"type": "CustomScript",
+				"typeHandlerVersion": "2.0",
+				"autoUpgradeMinorVersion": true,
+				"settings": {
+					"fileUris": [
+						"[variables('nodePrepScriptUrl')]"
+					]
+				},
+				"protectedSettings": {
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhsmUsernameOrOrgId'), ' ', variables('singlequote'), parameters('rhsmPasswordOrActivationKey'), variables('singlequote'), ' ', parameters('rhsmPoolId'))]"
+				}
+			}	
+		}, {
 			"name": "OpenShiftDeployment",
 			"type": "Microsoft.Resources/deployments",
 			"apiVersion": "[variables('apiVersionLinkTemplate')]",
@@ -1887,7 +2032,8 @@
 				"bastionPrep",
 				"masterPrepLoop",
 				"infraPrepLoop",
-				"testNodePrepLoop"
+				"testNodePrepLoop",
+				"prodNodePrepLoop"
 			],
 			"properties": {
 				"mode": "Incremental",
