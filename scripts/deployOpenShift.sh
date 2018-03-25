@@ -28,6 +28,7 @@ export LOCATION=${21}
 export COCKPIT=${22}
 export AZURE=${23}
 export STORAGEKIND=${24}
+export PRODNODECOUNT=${25}
 
 export BASTION=$(hostname)
 

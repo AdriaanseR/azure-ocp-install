@@ -253,6 +253,7 @@ paket-files/
 
 .azure/
 .ssh/
+.bash*
 azuredeploy.parameters.json
 commands.txt
 deploy.sh
