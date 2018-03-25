@@ -251,6 +251,9 @@ paket-files/
 .idea/
 *.sln.iml
 
+.azure/
+.ssh/
+azuredeploy.parameters.json
+commands.txt
 deploy.sh
 deploy.cfg
-azuredeploy.parameters.json
