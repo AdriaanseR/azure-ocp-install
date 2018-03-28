@@ -31,6 +31,10 @@ export STORAGEKIND=${24}
 
 export PRODNODECOUNT=${25}
 
+export INFRAPUBLIC="${INFRA}p"
+export INFRARESTRICTED="${INFRA}r"
+export INFRAINTERNAL="${INFRA}i"
+
 export PRODNODE="${NODE}p"
 export TESTNODE="${NODE}t"
 
@@ -45,7 +49,7 @@ echo "$METRICS [14] - $LOGGING [15] - $TENANTID [16]"
 echo "$SUBSCRIPTIONID [17] - $AADCLIENTID [18] - $AADCLIENTSECRET [19]"
 echo "$RESOURCEGROUP [20] - $LOCATION [21] - $COCKPIT [22] - $AZURE [23]"
 echo "$STORAGEKIND [24] - $PRODNODECOUNT [25]"
-echo "$PRODNODE - $TESTNODE - $BASTION"
+echo "$INFRAPUBLIC - $INFRARESTRICTED - $INFRAINTERNAL - $PRODNODE - $TESTNODE - $BASTION"
 
 # Determine if Commercial Azure or Azure Government
 CLOUD=$( curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/location?api-version=2017-04-02&format=text" | cut -c 1-2 )
@@ -521,7 +525,17 @@ done
 
 for (( c=0; c<$INFRACOUNT; c++ ))
 do
-  echo "$INFRA-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'public'}\" openshift_hostname=$INFRA-$c" >> /etc/ansible/hosts
+  echo "$INFRAPUBLIC-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'public'}\" openshift_hostname=$INFRAPUBLIC-$c" >> /etc/ansible/hosts
+done
+
+for (( c=0; c<$INFRACOUNT; c++ ))
+do
+  echo "$INFRARESTRICTED-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'restricted'}\" openshift_hostname=$INFRARESTRICTED-$c" >> /etc/ansible/hosts
+done
+
+for (( c=0; c<1; c++ ))
+do
+  echo "$INFRAINTERNAL-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'internal'}\" openshift_hostname=$INFRAINTERNAL-$c" >> /etc/ansible/hosts
 done
 
 # Loop to add Test Nodes
