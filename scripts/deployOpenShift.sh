@@ -32,7 +32,6 @@ export STORAGEKIND=${24}
 export PRODNODECOUNT=${25}
 
 export INFRAPUBLIC="${INFRA}p"
-export INFRARESTRICTED="${INFRA}r"
 export INFRAINTERNAL="${INFRA}i"
 
 export PRODNODE="${NODE}p"
@@ -49,7 +48,7 @@ echo "$METRICS [14] - $LOGGING [15] - $TENANTID [16]"
 echo "$SUBSCRIPTIONID [17] - $AADCLIENTID [18] - $AADCLIENTSECRET [19]"
 echo "$RESOURCEGROUP [20] - $LOCATION [21] - $COCKPIT [22] - $AZURE [23]"
 echo "$STORAGEKIND [24] - $PRODNODECOUNT [25]"
-echo "$INFRAPUBLIC - $INFRARESTRICTED - $INFRAINTERNAL - $PRODNODE - $TESTNODE - $BASTION"
+echo "$INFRAPUBLIC - $INFRAINTERNAL - $PRODNODE - $TESTNODE - $BASTION"
 
 # Determine if Commercial Azure or Azure Government
 CLOUD=$( curl -H Metadata:true "http://169.254.169.254/metadata/instance/compute/location?api-version=2017-04-02&format=text" | cut -c 1-2 )
@@ -475,6 +474,9 @@ openshift_master_cluster_hostname=$MASTERPUBLICIPHOSTNAME
 openshift_master_cluster_public_hostname=$MASTERPUBLICIPHOSTNAME
 openshift_master_cluster_public_vip=$MASTERPUBLICIPADDRESS
 
+openshift_master_api_port=443
+openshift_master_console_port=443
+
 # Enable HTPasswdPasswordIdentityProvider
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
 
@@ -496,7 +498,7 @@ openshift_logging_es_nodeselector={"type":"infra"}
 openshift_logging_kibana_nodeselector={"type":"infra"}
 openshift_logging_curator_nodeselector={"type":"infra"}
 openshift_master_logging_public_url=https://kibana.$ROUTING
-openshift_logging_master_public_url=https://$MASTERPUBLICIPHOSTNAME:8443
+openshift_logging_master_public_url=https://$MASTERPUBLICIPHOSTNAME:443
 #openshift_logging_storage_labels={'storage': 'logging'}
 
 # host group for masters
@@ -528,11 +530,7 @@ do
   echo "$INFRAPUBLIC-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'public'}\" openshift_hostname=$INFRAPUBLIC-$c" >> /etc/ansible/hosts
 done
 
-for (( c=0; c<$INFRACOUNT; c++ ))
-do
-  echo "$INFRARESTRICTED-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'restricted'}\" openshift_hostname=$INFRARESTRICTED-$c" >> /etc/ansible/hosts
-done
-
+# A single infra internal node (until MS supports SNAT on their ILBs)
 for (( c=0; c<1; c++ ))
 do
   echo "$INFRAINTERNAL-$c openshift_node_labels=\"{'type': 'infra', 'zone': 'default', 'region': 'infra', 'router': 'internal'}\" openshift_hostname=$INFRAINTERNAL-$c" >> /etc/ansible/hosts
