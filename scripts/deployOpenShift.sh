@@ -474,7 +474,7 @@ openshift_master_cluster_hostname=$MASTERPUBLICIPHOSTNAME
 openshift_master_cluster_public_hostname=$MASTERPUBLICIPHOSTNAME
 openshift_master_cluster_public_vip=$MASTERPUBLICIPADDRESS
 
-openshift_master_api_port=443
+openshift_master_api_port=8443
 openshift_master_console_port=443
 
 # Enable HTPasswdPasswordIdentityProvider
