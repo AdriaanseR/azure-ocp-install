@@ -1118,7 +1118,7 @@
 						"protocol": "Tcp",
 						"loadDistribution": "SourceIP",
 						"idleTimeoutInMinutes": 30,
-						"frontendPort": 8443,
+						"frontendPort": 443,
 						"backendPort": 8443,
 						"probe": {
 							"id": "[variables('masterLb8443ProbeId')]"
