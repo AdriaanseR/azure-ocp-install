@@ -374,6 +374,7 @@
 		"masterSubnetPrefix": "10.203.2.0/24",
 		"infraSubnetPrefix": "10.203.7.0/24",
 		"nodeSubnetPrefix": "10.203.4.0/24",
+		"infraInternalStaticPrivateIp": "10.203.7.5",
 		"virtualNetworkName": "openshiftvnet",
 		"masterSubnetName": "mastersubnet",
 		"infraSubnetName": "infrasubnet",
@@ -1416,7 +1417,8 @@
 				"ipConfigurations": [{
 					"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'ipconfig')]",
 					"properties": {
-						"privateIPAllocationMethod": "Dynamic",
+						"privateIPAllocationMethod": "Static",
+						"privateIPAddress": "[variables('infraInternalStaticPrivateIp')]",
 						"subnet": {
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('infraSubnetName'))]"
 						}
