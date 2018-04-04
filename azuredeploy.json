@@ -374,6 +374,7 @@
 		"masterSubnetPrefix": "10.203.2.0/24",
 		"infraSubnetPrefix": "10.203.7.0/24",
 		"nodeSubnetPrefix": "10.203.4.0/24",
+		"bastionInternalStaticPrivateIp": "10.203.2.5",
 		"infraInternalStaticPrivateIp": "10.203.7.5",
 		"virtualNetworkName": "openshiftvnet",
 		"masterSubnetName": "mastersubnet",
@@ -1304,7 +1305,8 @@
 				"ipConfigurations": [{
 					"name": "[concat(variables('openshiftBastionHostname'), 'ipconfig')]",
 					"properties": {
-						"privateIPAllocationMethod": "Dynamic",
+						"privateIPAllocationMethod": "Static",
+						"privateIPAddress": "[variables('bastionInternalStaticPrivateIp')]",
 						"publicIPAddress": {
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/publicIPAddresses/', variables('bastionPublicIp'))]"
 						},
