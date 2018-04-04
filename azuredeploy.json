@@ -382,8 +382,8 @@
 		"nodeSubnetName": "nodesubnet",
 		"bastionPublicIp": "bastionpublicip",
 		"bastionPublicIpDnsLabel": "[concat('bastiondns', uniqueString(resourceGroup().id))]",
-		"infraLbPublicIpDnsLabel": "[concat('infradns', uniqueString(concat(resourceGroup().id, 'infrap')))]",
-		"openshiftMasterPublicIpDnsLabel": "[concat('masterdns', uniqueString(concat(resourceGroup().id, 'master')))]",
+		"infraLbPublicIpDnsLabel": "snbvaz012elb1otacn",
+		"openshiftMasterPublicIpDnsLabel": "snbvaz012elb1extcon",
 		"persistentVolume1Type": "Standard_LRS",
 		
 		"masterLoadBalancerName": "[concat(variables('openshiftMasterHostname'), 'lb')]",
