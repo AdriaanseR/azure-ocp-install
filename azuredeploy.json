@@ -1330,6 +1330,7 @@
 				"app": "[variables('redHatTags').app]"
 			},
 			"dependsOn": [
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftBastionHostname'), '-nic')]",
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('masterLoadBalancerName'))]",
 				"[concat(variables('masterLbId'), '/inboundNatRules/SSH-', variables('openshiftMasterHostname') ,copyIndex())]",
@@ -1372,6 +1373,7 @@
 				"app": "[variables('redHatTags').app]"
 			},
 			"dependsOn": [
+				"infraInternalNicLoop",
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('infraPublicLoadBalancerName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]"
@@ -2291,7 +2293,7 @@
 	"outputs": {
 		"Openshift Console Url": {
 			"type": "string",
-			"value": "[concat('https://', reference(variables('openshiftMasterPublicIpDnsLabel')).dnsSettings.fqdn, ':443/console')]"
+			"value": "[concat('https://', reference(variables('openshiftMasterPublicIpDnsLabel')).dnsSettings.fqdn, '/console')]"
 		},
 		"Bastion DNS FQDN": {
 			"type": "string",
