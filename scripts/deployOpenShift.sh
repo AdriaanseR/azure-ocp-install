@@ -461,8 +461,8 @@ osm_default_node_selector='type=app'
 openshift_disable_check=memory_availability,docker_image_availability
 
 # default selectors for router and registry services
-openshift_router_selector='router=public'
-openshift_registry_selector='router=public'
+openshift_router_selector='type=infra'
+openshift_registry_selector='type=infra'
 
 # Deploy Service Catalog
 # openshift_enable_service_catalog=false
